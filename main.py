@@ -4,6 +4,10 @@ LED strips within a picture frame. When the button is pressed the display
 cycles between the different routers in the mess network."""
 
 from machine import Pin
+import time
+
+BUTTON_CNT = 0
+NETWORK_LIST = []
 
 print('\n\n\n\n\n')  # Print some new lines to separate printout from garbage
 
@@ -22,8 +26,8 @@ class Router:
         # LED bars - sets the pins to outputs for the LED strips
         self.bar_1 = Pin(16, Pin.OUT)
         self.bar_2 = Pin(5, Pin.OUT)
-        self.bar_3 = Pin(4, Pin.OUT)
-        self.bar_4 = Pin(0, Pin.OUT)
+        self.bar_3 = Pin(15, Pin.OUT)
+        self.bar_4 = Pin(4, Pin.OUT)
         self.bar_5 = Pin(2, Pin.OUT)
 
         # Call calc_bars to calculate the strength bars based on the RSSI
@@ -103,9 +107,20 @@ def main():
         if b'\xf0\x9f\xa7\xbd' in network:
             network_list.append(network)
 
-    for router in network_list:
-        r = Router(router)
-        print(r)
+    button_cnt = 0
+    button = Pin(14, Pin.IN)
+    button.irq(trigger=Pin.IRQ_RISING, handler=callback)
+
+
+def callback(p):
+    print(p)
+    if BUTTON_CNT == 2:
+        BUTTON_CNT = 0
+    else:
+        BUTTON_CNT += 1
+
+    print(Router(network_list[BUTTON_CNT]))
+    print(BUTTON_CNT)
 
 
 # If this script is run itself, call main
