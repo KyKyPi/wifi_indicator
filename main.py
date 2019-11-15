@@ -95,7 +95,7 @@ def main():
     if not sta_if.isconnected():
         print('connecting to network...')
         sta_if.active(True)
-        sta_if.connect('🧽', '***REMOVED***')
+        sta_if.connect('🧽', 'password')
         while not sta_if.isconnected():
             pass
     print('network config:', sta_if.ifconfig())
