@@ -1,5 +1,5 @@
 This project was started to use a picture frame with LED strips that I had from a previous project and to learn a bit about micro python.
-The idea of the project is to display the strenght of the wifi in the house on LED strips in the picture frame (5 bars).
+The idea of the project is to display the strength of the wifi in the house on LED strips in the picture frame (5 bars).
 The bars will be hidden behind a picture so they won't be noticable if the lights are off.
 Hoping to add a button so the user can cycle through the 3 different routers in the house.
 Also, add power switch as not to waste electricity.
