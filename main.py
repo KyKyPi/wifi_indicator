@@ -23,9 +23,11 @@ class Router:
         self.bars = 0
         self.location = ""
 
+        self.button_cnt = 0
+
         # LED bars - sets the pins to outputs for the LED strips
-        self.bar_1 = Pin(16, Pin.OUT)
-        self.bar_2 = Pin(5, Pin.OUT)
+        self.bar_1 = Pin(5, Pin.OUT)
+        self.bar_2 = Pin(16, Pin.OUT)
         self.bar_3 = Pin(15, Pin.OUT)
         self.bar_4 = Pin(4, Pin.OUT)
         self.bar_5 = Pin(2, Pin.OUT)
@@ -77,6 +79,17 @@ class Router:
         self.lights_on(self.bars)
         return self.bars
 
+    def callback(self, p):
+        print("callback")
+        if self.button_cnt == 2:
+            self.button_cnt = 0
+        else:
+            self.button_cnt += 1
+
+        # print(Router(self.network_list[BUTTON_CNT]))
+        print(self.button_cnt)
+        print(self)
+
     def __str__(self):
 
         return ("SSID: {} \n "
@@ -98,29 +111,33 @@ def main():
         sta_if.connect('🧽', '***REMOVED***')
         while not sta_if.isconnected():
             pass
-    print('network config:', sta_if.ifconfig())
+    print('network %%%%%%%%%%% config:', sta_if.ifconfig())
 
     network_list_all = sta_if.scan()
     print(network_list_all)
     network_list = []
+    print("SSID, BSSID, RSSI, bars, location")
     for network in network_list_all:
+        # print(f"{network=}")
         if b'\xf0\x9f\xa7\xbd' in network:
             network_list.append(network)
+            print("\n" + str(Router(network)))
 
     button_cnt = 0
     button = Pin(14, Pin.IN)
-    button.irq(trigger=Pin.IRQ_RISING, handler=callback)
+    print(str(button))
+
+    # What I want to happen...
+    # When the button is pressed, call Router(network_list[button_cnt])
+    # with the updated button count
+
+    button.irq(trigger=Pin.IRQ_RISING, handler=Router(network_list[button_cnt]).callback)
+    # So the instance of Router isn't changing because handler is
+    # determined ahead of time
 
 
-def callback(p):
-    print(p)
-    if BUTTON_CNT == 2:
-        BUTTON_CNT = 0
-    else:
-        BUTTON_CNT += 1
 
-    print(Router(network_list[BUTTON_CNT]))
-    print(BUTTON_CNT)
+
 
 
 # If this script is run itself, call main
@@ -147,3 +164,4 @@ if __name__ == '__main__':
 # BSSID: b'\xe6\x95nJ=J' - kitchen
 # RSSI: -80
 # bars: 2
+
