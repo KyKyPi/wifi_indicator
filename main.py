@@ -1,29 +1,13 @@
-""" This script finds the routers on the network, calculates the RSSI,
-converts the RSSI value into strength bars, and displays the strength bars on
-LED strips within a picture frame. When the button is pressed the display
-cycles between the different routers in the mess network."""
+
 
 from machine import Pin
-import time
-
-BUTTON_CNT = 0
-NETWORK_LIST = []
-
-print('\n\n\n\n\n')  # Print some new lines to separate printout from garbage
 
 
-class Router:
-    """Create a Router class based on the router passed in"""
+class LEDS:
 
-    def __init__(self, router):
-        """Initialize Router class variables"""
-        self.ssid = router[0]
-        self.bssid = router[1]
-        self.RSSI = router[3]
-        self.bars = 0
-        self.location = ""
-
-        self.button_cnt = 0
+    def __init__(self):
+        self.percent = 0
+        self.total_bars = 5
 
         # LED bars - sets the pins to outputs for the LED strips
         self.bar_1 = Pin(5, Pin.OUT)
@@ -32,136 +16,115 @@ class Router:
         self.bar_4 = Pin(4, Pin.OUT)
         self.bar_5 = Pin(2, Pin.OUT)
 
-        # Call calc_bars to calculate the strength bars based on the RSSI
-        self.calc_bars()
-        self.find_location()
+    def percent_2_bars(self, percent):
+        return round((percent * self.total_bars) / 100)
 
-    def find_location(self):
-        """Based on the known BSSID(s) determine the location in the house"""
-        if self.bssid == b'\xe6\x95nE\x1f\x18':
-            self.location = "bedroom"
-        elif self.bssid == b'\xe6\x95nE\x1e\xfe':
-            self.location = "living room"
-        elif self.bssid == b'\xe6\x95nJ=J':
-            self.location = "kitchen"
+    def get_bars(self):
+        return self.percent_2_bars(self.percent)
 
-    def lights_on(self, num):
-        """Turn the appropriate lights on depending on the signal strength (num)
-            Ex. num = 2 then bar_1.on() and bar_2.on()"""
+    def get_percent(self):
+        return self.percent
+
+    def set_percent(self, percent):
+        self.percent = percent
+        self.set_bars()
+
+    def set_bars(self):
+        bars = self.percent_2_bars(self.percent)
+
         self.bar_1.off()
         self.bar_2.off()
         self.bar_3.off()
         self.bar_4.off()
         self.bar_5.off()
-        if num >= 1:
+        if bars >= 1:
             self.bar_1.on()
-        if num >= 2:
+        if bars >= 2:
             self.bar_2.on()
-        if num >= 3:
+        if bars >= 3:
             self.bar_3.on()
-        if num >= 4:
+        if bars >= 4:
             self.bar_4.on()
-        if num >= 5:
+        if bars >= 5:
             self.bar_5.on()
 
-    def calc_bars(self):
-        """Calculate the strength bars that correspond to the read RSSI value"""
-        if self.RSSI < -82:
-            self.bars = 1
-        elif self.RSSI < -77:
-            self.bars = 2
-        elif self.RSSI < -72:
-            self.bars = 3
-        elif self.RSSI < -67:
-            self.bars = 4
-        elif self.RSSI < 0:
-            self.bars = 5
-        self.lights_on(self.bars)
-        return self.bars
 
-    def callback(self, p):
-        print("callback")
-        if self.button_cnt == 2:
-            self.button_cnt = 0
+class Router:
+
+    def __init__(self, ssid, bssid, rssi):
+        self.ssid = ssid
+        self.bssid = bssid
+        self.rssi = rssi
+
+    def get_signal_percent(self):
+        # RSSI or this signal value is measured in decibels from 0 (zero) to
+        # -120 (minus 120). The closer the value to 0 (zero), the stronger the
+        # signal will be.
+        if self.rssi < -80:
+            return 20
+        elif self.rssi < -70:
+            return 40
+        elif self.rssi < -60:
+            return 60
+        elif self.rssi < -50:
+            return 80
+        elif self.rssi <= 0:
+            return 100
         else:
-            self.button_cnt += 1
-
-        # print(Router(self.network_list[BUTTON_CNT]))
-        print(self.button_cnt)
-        print(self)
+            return 0
 
     def __str__(self):
 
         return ("SSID: {} \n "
                 "BSSID: {} \n "
                 "RSSI: {} \n "
-                "bars: {} \n "
-                "location: {}\n\n").format(self.ssid, self.bssid, self.RSSI,
-                                           self.bars, self.location)
+                "Strength %: {} \n\n").format(self.ssid, self.bssid, self.rssi,
+                                              self.get_signal_percent())
+
+
+class Wifi:
+
+    def get_all_routers(self):
+        import network
+        sta_if = network.WLAN(network.STA_IF)
+        all_routers = sta_if.scan()
+
+        routers = []
+        for router_tuple in all_routers:
+            router = Router(router_tuple[0], router_tuple[1], router_tuple[3])
+            routers.append(router)
+
+        return routers
+
+    def get_routers_with_name(self, router_name):
+        routers = []
+
+        for router in self.get_all_routers():
+            if router.ssid == router_name:
+                routers.append(router)
+
+        return routers
 
 
 def main():
-    """Set up network connection and display router signal strength on
-    LED strips"""
-    import network
-    sta_if = network.WLAN(network.STA_IF)
-    if not sta_if.isconnected():
-        print('connecting to network...')
-        sta_if.active(True)
-        sta_if.connect('🧽', '***REMOVED***')
-        while not sta_if.isconnected():
-            pass
-    print('network %%%%%%%%%%% config:', sta_if.ifconfig())
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    wifi = Wifi()
+    leds = LEDS()
+    all_routers = wifi.get_all_routers()
+    print("all_routers: " + str(all_routers))
+    sponge_routers = wifi.get_routers_with_name(b'\xf0\x9f\xa7\xbd')
+    for router in sponge_routers:
+        print("sponge_router: " + str(router))
 
-    network_list_all = sta_if.scan()
-    print(network_list_all)
-    network_list = []
-    print("SSID, BSSID, RSSI, bars, location")
-    for network in network_list_all:
-        # print(f"{network=}")
-        if b'\xf0\x9f\xa7\xbd' in network:
-            network_list.append(network)
-            print("\n" + str(Router(network)))
-
-    button_cnt = 0
-    button = Pin(14, Pin.IN)
-    print(str(button))
-
-    # What I want to happen...
-    # When the button is pressed, call Router(network_list[button_cnt])
-    # with the updated button count
-
-    button.irq(trigger=Pin.IRQ_RISING, handler=Router(network_list[button_cnt]).callback)
-    # So the instance of Router isn't changing because handler is
-    # determined ahead of time
-
-
-
-
+        signal_percent = router.get_signal_percent()
+        print("Signal percent:", signal_percent)
+        leds.set_percent(signal_percent)
+        print("LED percent", leds.percent)
+        print("Bars:", leds.get_bars())
+        # print("get_signal_percent: " + str(router.get_signal_percent()))
+        # print(leds.get_bars())
 
 
 # If this script is run itself, call main
 if __name__ == '__main__':
     main()
-
-# Todo:
-#  Determine difference between bssid(s)?
-#  Wire up and control buttons/LED strips
-#  Clean up code
-
-# Guessing bssid(s) to rooms based on signal strength in bedroom
-# SSID: b'\xf0\x9f\xa7\xbd'
-# BSSID: b'\xe6\x95nE\x1f\x18' - bedroom
-# RSSI: -17
-# bars: 5
-
-# SSID: b'\xf0\x9f\xa7\xbd'
-# BSSID: b'\xe6\x95nE\x1e\xfe' - living room
-# RSSI: -58
-# bars: 5
-
-# SSID: b'\xf0\x9f\xa7\xbd'
-# BSSID: b'\xe6\x95nJ=J' - kitchen
-# RSSI: -80
-# bars: 2
-
