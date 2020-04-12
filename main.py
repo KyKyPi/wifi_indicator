@@ -106,23 +106,42 @@ class Wifi:
         return routers
 
 
-def main():
-    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    wifi = Wifi()
-    leds = LEDS()
-    all_routers = wifi.get_all_routers()
-    print("all_routers: " + str(all_routers))
-    sponge_routers = wifi.get_routers_with_name(b'\xf0\x9f\xa7\xbd')
-    for router in sponge_routers:
-        print("sponge_router: " + str(router))
+class Button:
+    def __init__(self, pin_num, button_func):
+        self.pin = Pin(pin_num, Pin.IN)
+        print(pin_num, button_func)
+        self.pin.irq(trigger=Pin.IRQ_RISING, handler=button_func)
 
-        signal_percent = router.get_signal_percent()
+
+class Main:
+
+    def __init__(self):
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        self.current_button_num = -1
+        self.wifi = Wifi()
+        self.leds = LEDS()
+        # all_routers = wifi.get_all_routers()
+        # print("all_routers: " + str(all_routers))
+        self.sponge_routers = self.wifi.get_routers_with_name(b'\xf0\x9f\xa7\xbd')
+        # for router in self.sponge_routers:
+        self.button = Button(14, self.button_func)
+
+    def button_func(self, pin):
+        self.current_button_num += 1
+        # ToDo - make button number wrap around
+        print(self.current_button_num)
+        current_router = self.sponge_routers[self.current_button_num]
+        print("sponge_router: " + str(current_router))
+
+        signal_percent = current_router.get_signal_percent()
         print("Signal percent:", signal_percent)
-        leds.set_percent(signal_percent)
-        print("LED percent", leds.percent)
-        print("Bars:", leds.get_bars())
-        # print("get_signal_percent: " + str(router.get_signal_percent()))
-        # print(leds.get_bars())
+        self.leds.set_percent(signal_percent)
+        print("LED percent", self.leds.percent)
+        print("Bars:", self.leds.get_bars())
+
+
+def main():
+    Main()
 
 
 # If this script is run itself, call main
