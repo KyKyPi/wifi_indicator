@@ -1,4 +1,5 @@
-
+# ToDo - Add commments
+# ToDo - Add LCD
 
 from machine import Pin
 
@@ -10,11 +11,11 @@ class LEDS:
         self.total_bars = 5
 
         # LED bars - sets the pins to outputs for the LED strips
-        self.bar_1 = Pin(5, Pin.OUT)
-        self.bar_2 = Pin(16, Pin.OUT)
-        self.bar_3 = Pin(15, Pin.OUT)
-        self.bar_4 = Pin(4, Pin.OUT)
-        self.bar_5 = Pin(2, Pin.OUT)
+        self.bar_1 = Pin(16, Pin.OUT)   # D0
+        self.bar_2 = Pin(5, Pin.OUT)    # D1
+        self.bar_3 = Pin(4, Pin.OUT)    # D2
+        self.bar_4 = Pin(2, Pin.OUT)    # D4
+        self.bar_5 = Pin(14, Pin.OUT)   # D5
 
     def percent_2_bars(self, percent):
         return round((percent * self.total_bars) / 100)
@@ -120,15 +121,15 @@ class Main:
         self.current_button_num = -1
         self.wifi = Wifi()
         self.leds = LEDS()
-        # all_routers = wifi.get_all_routers()
-        # print("all_routers: " + str(all_routers))
         self.sponge_routers = self.wifi.get_routers_with_name(b'\xf0\x9f\xa7\xbd')
-        # for router in self.sponge_routers:
-        self.button = Button(14, self.button_func)
+        self.len_sponge_routers = len(self.sponge_routers)
+        self.button = Button(12, self.button_func)  # D6 # ToDo - make button pin variable
 
     def button_func(self, pin):
-        self.current_button_num += 1
-        # ToDo - make button number wrap around
+        if self.current_button_num == self.len_sponge_routers - 1:
+            self.current_button_num = 0
+        else:
+            self.current_button_num += 1
         print(self.current_button_num)
         current_router = self.sponge_routers[self.current_button_num]
         print("sponge_router: " + str(current_router))
