@@ -8,14 +8,15 @@ class LEDS:
 
     def __init__(self):
         self.percent = 0
-        self.total_bars = 5
+        self.total_bars = 3
 
         # LED bars - sets the pins to outputs for the LED strips
-        self.bar_1 = Pin(16, Pin.OUT)   # D0
-        self.bar_2 = Pin(5, Pin.OUT)    # D1
-        self.bar_3 = Pin(4, Pin.OUT)    # D2
-        self.bar_4 = Pin(2, Pin.OUT)    # D4
-        self.bar_5 = Pin(14, Pin.OUT)   # D5
+        self.bar_1 = Pin(12, Pin.OUT)   # D6
+        self.bar_2 = Pin(13, Pin.OUT)   # D7
+        self.bar_3 = Pin(3, Pin.OUT)    # RX
+        # Shrink to just 3 LEDs for now
+        # self.bar_4 = Pin(1, Pin.OUT)    # SD2
+        # self.bar_5 = Pin(16, Pin.OUT)   # SD3
 
     def percent_2_bars(self, percent):
         """Calculate LED bars based on percentage."""
@@ -41,18 +42,18 @@ class LEDS:
         self.bar_1.off()
         self.bar_2.off()
         self.bar_3.off()
-        self.bar_4.off()
-        self.bar_5.off()
+        # self.bar_4.off()
+        # self.bar_5.off()
         if bars >= 1:
             self.bar_1.on()
         if bars >= 2:
             self.bar_2.on()
         if bars >= 3:
             self.bar_3.on()
-        if bars >= 4:
-            self.bar_4.on()
-        if bars >= 5:
-            self.bar_5.on()
+        # if bars >= 4:
+        #     self.bar_4.on()
+        # if bars >= 5:
+        #     self.bar_5.on()
 
 
 class Router:
@@ -100,6 +101,7 @@ class Wifi:
         """Return a list of Router instances for all scanned routers."""
         import network
         sta_if = network.WLAN(network.STA_IF)
+        sta_if.active(True)
         all_routers = sta_if.scan()
 
         routers = []
@@ -136,7 +138,7 @@ class Main:
 
     def __init__(self):
         print("\n%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-        self.button_pin = 12
+        self.button_pin = 14
         self.current_button_num = -1
         self.wifi = Wifi()
         self.leds = LEDS()
